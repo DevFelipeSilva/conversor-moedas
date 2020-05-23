@@ -18,6 +18,7 @@ function ConversorMoedas() {
   const [formValidado, setFormValidado] = useState(false);
   const [exibirModal, setExibirModal] = useState(false);
   const [resultadoConversao, setResultadoConversao] = useState('');
+  const [exibirMsgErro, setExibirMsgErro] = useState(false);
 
   function handleValor(event) {
     setValor(event.target.value.replace(/\D/g, ''));
@@ -44,10 +45,15 @@ function ConversorMoedas() {
       axios.get(FIXER_URL)
         .then(res => {
           const cotacao = obterCotacao(res.data);
-          setResultadoConversao(`${valor} ${moedaDe} = ${cotacao} ${moedaPara}`);
-          setExibirModal(true);
-          setExibirSpinner(false);
-        });
+          if (cotacao) {
+            setResultadoConversao(`${valor} ${moedaDe} = ${cotacao} ${moedaPara}`);
+            setExibirModal(true);
+            setExibirSpinner(false);
+            setExibirMsgErro(false);
+          }else {
+            exibirErro();
+          }
+        }).catch(err => exibirErro());
     }
   }
 
@@ -61,13 +67,16 @@ function ConversorMoedas() {
     const cotacao = (1 / cotacaoDe * cotacaoPara) * valor;
     return cotacao.toFixed(2);
   }
-
+  function exibirErro() {
+    setExibirMsgErro(true);
+    setExibirSpinner(false);
+  }
 
 
   return (
     <div>
       <h1>Conversor de Moedas</h1>
-      <Alert variant="danger" show={false}>Erro obtendo dados de convesão, tente novamente.</Alert>
+      <Alert variant="danger" show={exibirMsgErro}>Erro obtendo dados de convesão, tente novamente.</Alert>
       <Jumbotron>
         <Form onSubmit={converter} noValidate validated={formValidado}>
           <Form.Row>
